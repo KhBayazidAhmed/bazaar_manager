@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">Bazaar Tracker </title>
+    <meta name="description"
+        content="Manage Your Bazaar offers comprehensive bazaar management solutions, helping you track expenses and income efficiently.">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Bayazid Ahmed">
+
+
+    <style>
+        /* Reset some default styles */
+        body,
+        h1,
+        h3 {
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+
+        h1 {
+            background-color: #3498db;
+            color: #fff;
+            padding: 20px 0;
+            text-align: center;
+        }
+
+        div {
+            background-color: #fff;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 5px;
+            /* box-shadow: 0 0 5px rgba(0, 0, 0, 0.2); */
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            color: #333;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 90%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin: 0.6rem 0;
+        }
+
+        /* Add space inside the select input selection */
+        select {
+            padding: 10px 30px 10px 10px;
+            /* Adjust padding to add space inside the select */
+        }
+
+        input[type="submit"],
+        button {
+            background-color: #3498db;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover,
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        h3 {
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+            margin: 20px 0;
+            border-radius: 5px;
+            /* box-shadow: 0 0 5px rgba(0, 0, 0, 0.2); */
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+
+        th {
+            background-color: #3498db;
+            color: #fff;
+        }
+
+        tfoot td {
+            background-color: #3498db;
+            color: #fff;
+        }
+
+        @media print {
+
+            #inputFills,
+            #editIcon,
+            button {
+                display: none;
+            }
+
+            body,
+            h1,
+            h3 {
+                margin-top: 1rem;
+                padding: 0;
+                text-align: center;
+                color: #333;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 0;
+                border: none;
+            }
+
+            th,
+            td {
+                padding: 10px;
+                border: none;
+            }
+
+            th {
+                color: black;
+                font-weight: bold;
+            }
+
+            tfoot td {
+                border-top: 1px solid black;
+                border-bottom: 1px solid black;
+                color: black;
+                font-weight: bold;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Bazaar Tracker</h1>
+    <div id="inputFills">
+        <label for="transactionType">Select: </label>
+        <select onchange="nameRemove()" id="transactionType" name="transactionType">
+            <option value="totalOut">Total Out</option>
+            <option value="totalIn">Total In</option>
+        </select>
+        <label id="nameLabel" for="name">Name: </label>
+        <input type="text" id="name" name="name">
+        <label for="Price">Price: </label>
+        <input type="number" id="Price" name="Price">
+        <input type="submit" onclick="saveData()" value="Submit">
+    </div>
+    <div id="print-content">
+        <h3 style="cursor: pointer;" onclick="updateData('totalIN')">Total In: <span id="totalInFill">
+                0</span><span id="editIcon">
+                &#x270E;</span></h3>
+        <table>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Number</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                    </tr>
+                </thead>
+                <tbody id="tableData">
+                </tbody>
+
+                <tfoot>
+                    <tr>
+                        <td> Total Item: <span id="showingTheTotalItem"></span></td>
+                        <td></td>
+                        <td> Total: <span id="totalTaka"></span></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </table>
+
+        <h3>Return : <span id="return">0</span></h3>
+    </div>
+    <button onclick="clearLocalStorage()">Clear</button>
+    <button onclick="doPrint()">Print</button>
+    <script>
+        console.log("--------------------------------------");
+        function nameRemove() {
+            if (document.querySelector("#transactionType").value === "totalIn") {
+                document.querySelector("#name").style.display = "none";
+                document.querySelector("#nameLabel").style.display = "none";
+            } else if (document.querySelector("#transactionType").value === "totalOut") {
+                document.querySelector("#name").style.display = "inline";
+                document.querySelector("#nameLabel").style.display = "inline";
+            }
+        }
+        function showData() {
+            document.querySelector("#totalInFill").innerHTML =
+                localStorage.getItem("totalIN") || 0;
+
+            let itemData = JSON.parse(localStorage.getItem("Item")) || [];
+            document.querySelector("#tableData").innerHTML = itemData
+                .map((e, i) => {
+                    return `<tr><td>${i + 1}</td><td>${e.name}</td><td style="cursor:pointer" onclick="updateData('Item',${i})"><span
+                id="editIcon">
+                &#x270E;</span>${e.price}</td></tr>`;
+                })
+                .join("");
+            let totalTaka = 0;
+            itemData.map((e) => {
+                totalTaka += Number(e.price);
+            });
+            document.querySelector("#showingTheTotalItem").innerHTML = itemData.length
+            document.querySelector("#totalTaka").innerHTML = totalTaka;
+            document.querySelector("#return").innerHTML =
+                localStorage.getItem("totalIN") - totalTaka;
+        }
+        function saveData() {
+            if (document.querySelector("#transactionType").value === "totalIn") {
+                let price = parseInt(localStorage.getItem("totalIN")) || 0;
+                console.log(typeof price);
+                price += parseInt(document.querySelector("#Price").value);
+                localStorage.setItem("totalIN", price.toString());
+            } else {
+                let items = JSON.parse(localStorage.getItem("Item")) || [];
+                items.push({
+                    name: document.querySelector("#name").value,
+                    price: document.querySelector("#Price").value,
+                });
+                localStorage.setItem("Item", JSON.stringify(items));
+            }
+            document.querySelector("#Price").value = "";
+            document.querySelector("#name").value = "";
+            showData();
+        }
+        function updateData(element, index) {
+            let newData = prompt(`Changing the ${element == "totalIN" ? " Total in" : `Item of Number : ${index + 1}`} `);
+            if (element == "totalIN") {
+                let price = parseInt(localStorage.getItem(`${element} `)) || 0;
+                price = parseInt(newData);
+                if (price) {
+                    console.log(price)
+                    localStorage.setItem("totalIN", price.toString());
+                }
+                showData();
+            } else if (element == "Item") {
+                let item = JSON.parse(localStorage.getItem("Item")) || 0;
+                if (newData) {
+                    item[index].price = newData
+                    localStorage.setItem('Item', JSON.stringify(item));
+                    showData();
+                }
+            }
+        }
+        function clearLocalStorage() {
+            if (confirm("Are you shure to clear ?")) {
+                localStorage.clear();
+            }
+            showData();
+        }
+        function doPrint() {
+            let eventName = prompt("Enter a name that will halp you to save the file : ");
+            let currentDate = new Date();
+            let formattedDate = currentDate.toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+            });
+            if (eventName || eventName == "") {
+                document.querySelector("#pageTitle").textContent =
+                    eventName + " Bazaar on " + formattedDate;
+
+                const printContents = document.getElementById("print-content").innerHTML;
+                const originalContents = document.body.innerHTML;
+
+                document.body.innerHTML = "<h1>Bazaar Manage</h1>" + printContents;
+                window.print();
+                setTimeout(function () {
+                    document.body.innerHTML = originalContents;
+                }, 100);
+            }
+
+
+        }
+        showData();
+        console.log("--------------------------------------");
+
+    </script>
+</body>
+
+</html>
